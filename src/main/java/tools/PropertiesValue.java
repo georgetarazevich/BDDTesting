@@ -31,4 +31,7 @@ public class PropertiesValue {
     public static String getWeatherstackForecast() {
         return PropertiesManager.getProperties().getProperty("weatherstackForecast");
     }
+    public static String getCity() {
+        return PropertiesManager.getProperties().getProperty("city");
+    }
 }

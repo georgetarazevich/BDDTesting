@@ -23,6 +23,7 @@ public class StepDefinitions {
     private Connection.Response weatherstackMainPageresponse = null;
     private Connection.Response weatherstackInformationForTheCity = null;
     private Connection.Response invalidAccessKeyResponse = null;
+    private Connection.Response languageWeatherstackForecastResponse = null;
     private Document documentWeatherstackMainPage = null;
     private DocumentContext jsonContextWeatherstackInformationForTheCity = null;
     private int currentCityTemperature = 100;
@@ -44,8 +45,57 @@ public class StepDefinitions {
 
     @Given("The user has query to send")
     public void TheUserHasInformationToSend() throws IOException, InterruptedException {
-        user = new User().setCity("Minsk").setAccessKey(PropertiesValue.getAccessKey());
+        user = new User().setCity(PropertiesValue.getCity()).setAccessKey(PropertiesValue.getAccessKey());
         query = new Query().setForecastUrl(PropertiesValue.getWeatherstackForecast());
+    }
+
+    @Given("^The user has query to send  with \"(.*)\"$")
+    public void TheUserHasInformationToSend(String language) throws IOException, InterruptedException {
+        user = new User().setCity(PropertiesValue.getCity()).setAccessKey(PropertiesValue.getAccessKey());
+        query = new Query().setForecastUrl(PropertiesValue.getWeatherstackForecast()).setLanguage(language);
+    }
+
+    @When("The User explicitly requests info in Language by default")
+    public void userExplicitlyRequestsInfoInLanguageByDefault() throws IOException {
+        log.info("the Language: " + query.getLanguage());
+        languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
+    }
+
+    @When("The user requests info in Language different than default")
+    public void userRequestsInfoInLanguageDifferentThanDefault() throws IOException {
+        log.info("the Language: " + query.getLanguage());
+        languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
+    }
+
+    @When("^The User requests info with city name \"(.*)\"$")
+    public void userRequestsInfoWithCityName(String city) throws IOException {
+        user.setCity(city);
+        log.info("the city: " + user.getCity());
+        languageWeatherstackForecastResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
+    }
+
+    @Then("The user receive code 105 function_access_restricted")
+    public void userReceiveCode105function_access_restricted() {
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(languageWeatherstackForecastResponse.body());
+        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
+        log.info("errorCode: " + errorCode);
+        assertThat(errorCode).isEqualTo(105);
+    }
+
+    @Then("The user receive code 605 invalid_language")
+    public void UserReceiveCode605invalid_language() {
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(languageWeatherstackForecastResponse.body());
+        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
+        log.info("errorCode: " + errorCode);
+        assertThat(errorCode).isEqualTo(605);
+    }
+
+    @Then("The user receive code 615 request_failed")
+    public void UserReceiveCode615request_failed() {
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(languageWeatherstackForecastResponse.body());
+        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
+        log.info("errorCode: " + errorCode);
+        assertThat(errorCode).isEqualTo(615);
     }
 
     @When("The user sends query with invalid access_key")
@@ -65,7 +115,7 @@ public class StepDefinitions {
         jsonContextWeatherstackInformationForTheCity = JsonPath.parse(weatherstackInformationForTheCity.body());
     }
 
-    @Then("The user receive code 101")
+    @Then("The user receive code 101 invalid_access_key")
     public void userReceiveCode101() {
         DocumentContext jsonContextAccessKeyInfo = JsonPath.parse(invalidAccessKeyResponse.body());
         int errorCode = jsonContextAccessKeyInfo.read("$['error']['code']");
