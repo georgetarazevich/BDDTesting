@@ -8,6 +8,7 @@ import fw.model.User;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import io.qameta.allure.Allure;
 import org.apache.log4j.Logger;
 import org.jsoup.Connection;
 import org.jsoup.nodes.Document;
@@ -17,6 +18,7 @@ import tools.PropertiesValue;
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
+
 
 public class StepDefinitions {
     private static Logger log = Logger.getLogger(StepDefinitions.class.getName());
@@ -57,49 +59,50 @@ public class StepDefinitions {
     }
 
     @Given("^access_key \"(.*)\"$")
-    public void access_key(String access_key) {
-        this.access_key = access_key;
+    public void access_key(String accessKey) {
+        this.access_key = accessKey;
     }
 
     @When("The User explicitly requests info in Language by default")
     public void userExplicitlyRequestsInfoInLanguageByDefault() throws IOException {
-        log.info("the Language: " + query.getLanguage());
-        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
+        Allure.label("layer", "rest");
+        log.info("the Language: " + this.query.getLanguage());
+        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(this.query, this.user);
     }
 
     @When("The user requests info in Language different than default")
     public void userRequestsInfoInLanguageDifferentThanDefault() throws IOException {
-        log.info("the Language: " + query.getLanguage());
-        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
+        log.info("the Language: " + this.query.getLanguage());
+        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(this.query, this.user);
     }
 
     @When("^The User requests info with city name \"(.*)\"$")
     public void userRequestsInfoWithCityName(String city) throws IOException {
         this.user.setCity(city);
-        log.info("the city: " + user.getCity());
-        this.languageWeatherstackForecastResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
+        log.info("the city: " + this.user.getCity());
+        this.languageWeatherstackForecastResponse = HttpHelper.getCurrentWeatherCity(this.user.getCity(), this.user.getAccessKey());
     }
 
     @When("The user sends query with invalid access key")
     public void TheUserSendsInvalidAccess_key() throws IOException {
-        this.user.setAccessKey(access_key);
-        log.info("the city and AccessKey: " + user.getCity() + " " + user.getAccessKey());
-        this.invalidAccessKeyResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
+        this.user.setAccessKey(this.access_key);
+        log.info("the city and AccessKey: " + this.user.getCity() + " " + this.user.getAccessKey());
+        this.invalidAccessKeyResponse = HttpHelper.getCurrentWeatherCity(this.user.getCity(), this.user.getAccessKey());
     }
 
     @When("A user open the main page Weatherstack")
     public void userOpenTheMainPageWeatherstack() throws IOException {
-        this.documentWeatherstackMainPage = weatherstackMainPageResponse.parse();
+        this.documentWeatherstackMainPage = this.weatherstackMainPageResponse.parse();
     }
 
     @When("A user parsing Weatherstack information")
     public void userParsingWeatherstackInformation() {
-        this.jsonContextWeatherstackInformationForTheCity = JsonPath.parse(weatherstackInformationForTheCityResponse.body());
+        this.jsonContextWeatherstackInformationForTheCity = JsonPath.parse(this.weatherstackInformationForTheCityResponse.body());
     }
 
     @Then("The user receive code 105 function_access_restricted")
     public void userReceiveCode105function_access_restricted() {
-        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(languageWeatherstackForecastResponse.body());
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
         int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
         log.info("errorCode: " + errorCode);
         assertThat(errorCode).isEqualTo(105);
@@ -107,7 +110,7 @@ public class StepDefinitions {
 
     @Then("The user receive code 605 invalid_language")
     public void UserReceiveCode605invalid_language() {
-        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(languageWeatherstackForecastResponse.body());
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
         int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
         log.info("errorCode: " + errorCode);
         assertThat(errorCode).isEqualTo(605);
@@ -115,7 +118,7 @@ public class StepDefinitions {
 
     @Then("The user receive code 615 request_failed")
     public void UserReceiveCode615request_failed() {
-        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(languageWeatherstackForecastResponse.body());
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
         int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
         log.info("errorCode: " + errorCode);
         assertThat(errorCode).isEqualTo(615);
@@ -123,7 +126,7 @@ public class StepDefinitions {
 
     @Then("The user receive code 101 invalid_access_key")
     public void userReceiveCode101() {
-        DocumentContext jsonContextAccessKeyInfo = JsonPath.parse(invalidAccessKeyResponse.body());
+        DocumentContext jsonContextAccessKeyInfo = JsonPath.parse(this.invalidAccessKeyResponse.body());
         int errorCode = jsonContextAccessKeyInfo.read("$['error']['code']");
         log.info("errorCode: " + errorCode);
         assertThat(errorCode).isEqualTo(101);
@@ -131,18 +134,18 @@ public class StepDefinitions {
 
     @Then("A user see current Temperature info")
     public void userSeeTemperatureInfo() {
-        this.currentCityTemperatureC = jsonContextWeatherstackInformationForTheCity.read("$['current']['temperature']");
-        log.info("currentTemperature: " + currentCityTemperatureC);
+        this.currentCityTemperatureC = this.jsonContextWeatherstackInformationForTheCity.read("$['current']['temperature']");
+        log.info("currentTemperature: " + this.currentCityTemperatureC);
     }
 
     @Then("^The current Temperature is Less Then \"(.*)\" C$")
     public void currentTemperatureIsLessThen(int temperature) {
-        assertThat(currentCityTemperatureC).isLessThan(temperature);
+        assertThat(this.currentCityTemperatureC).isLessThan(temperature);
     }
 
     @Then("A user see the Weather forecast for the 5 days")
     public void userSeeTheWeatherForecastForThe5days() {
-        Elements weekDaysElements = documentWeatherstackMainPage.selectXpath("//*[@class='week']//*[@class='day']");
+        Elements weekDaysElements = this.documentWeatherstackMainPage.selectXpath("//*[@class='week']//*[@class='day']");
         log.info("weekDaysElements.size(): " + weekDaysElements.size());
         assertThat(weekDaysElements.size()).isEqualTo(5);
     }
