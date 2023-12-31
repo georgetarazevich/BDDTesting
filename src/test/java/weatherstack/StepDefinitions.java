@@ -20,58 +20,81 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class StepDefinitions {
     private static Logger log = Logger.getLogger(StepDefinitions.class.getName());
-    private Connection.Response weatherstackMainPageresponse = null;
-    private Connection.Response weatherstackInformationForTheCity = null;
+    private Connection.Response weatherstackMainPageResponse = null;
+    private Connection.Response weatherstackInformationForTheCityResponse = null;
     private Connection.Response invalidAccessKeyResponse = null;
     private Connection.Response languageWeatherstackForecastResponse = null;
     private Document documentWeatherstackMainPage = null;
     private DocumentContext jsonContextWeatherstackInformationForTheCity = null;
-    private int currentCityTemperature = 100;
+    private int currentCityTemperatureC = 100;
+    private String access_key = "";
 
-    private User user;
-    private Query query;
+    private User user = null;
+    private Query query = null;
 
 
     @Given("^Current Weatherstack information for the city \"(.*)\"$")
     public void weatherstackInformationForTheCity(String city) throws IOException, InterruptedException {
         log.info("the city: " + city);
-        weatherstackInformationForTheCity = HttpHelper.getCurrentWeatherCity(city, PropertiesValue.getAccessKey());
+        this.weatherstackInformationForTheCityResponse = HttpHelper.getCurrentWeatherCity(city, PropertiesValue.getAccessKey());
     }
 
     @Given("The main page Weatherstack")
     public void theMainPageWeatherstack() throws IOException, InterruptedException {
-        weatherstackMainPageresponse = HttpHelper.getWeatherstackMainPage();
+        this.weatherstackMainPageResponse = HttpHelper.getWeatherstackMainPage();
     }
 
     @Given("The user has query to send")
     public void TheUserHasInformationToSend() throws IOException, InterruptedException {
-        user = new User().setCity(PropertiesValue.getCity()).setAccessKey(PropertiesValue.getAccessKey());
-        query = new Query().setForecastUrl(PropertiesValue.getWeatherstackForecast());
+        this.user = new User().setCity(PropertiesValue.getCity()).setAccessKey(PropertiesValue.getAccessKey());
+        this.query = new Query().setForecastUrl(PropertiesValue.getWeatherstackForecast());
     }
 
-    @Given("^The user has query to send  with \"(.*)\"$")
+    @Given("^The user has query to send  with Language \"(.*)\"$")
     public void TheUserHasInformationToSend(String language) throws IOException, InterruptedException {
-        user = new User().setCity(PropertiesValue.getCity()).setAccessKey(PropertiesValue.getAccessKey());
-        query = new Query().setForecastUrl(PropertiesValue.getWeatherstackForecast()).setLanguage(language);
+        this.user = new User().setCity(PropertiesValue.getCity()).setAccessKey(PropertiesValue.getAccessKey());
+        this.query = new Query().setForecastUrl(PropertiesValue.getWeatherstackForecast()).setLanguage(language);
+    }
+
+    @Given("^access_key \"(.*)\"$")
+    public void access_key(String access_key) {
+        this.access_key = access_key;
     }
 
     @When("The User explicitly requests info in Language by default")
     public void userExplicitlyRequestsInfoInLanguageByDefault() throws IOException {
         log.info("the Language: " + query.getLanguage());
-        languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
+        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
     }
 
     @When("The user requests info in Language different than default")
     public void userRequestsInfoInLanguageDifferentThanDefault() throws IOException {
         log.info("the Language: " + query.getLanguage());
-        languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
+        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(query, user);
     }
 
     @When("^The User requests info with city name \"(.*)\"$")
     public void userRequestsInfoWithCityName(String city) throws IOException {
-        user.setCity(city);
+        this.user.setCity(city);
         log.info("the city: " + user.getCity());
-        languageWeatherstackForecastResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
+        this.languageWeatherstackForecastResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
+    }
+
+    @When("The user sends query with invalid access key")
+    public void TheUserSendsInvalidAccess_key() throws IOException {
+        this.user.setAccessKey(access_key);
+        log.info("the city and AccessKey: " + user.getCity() + " " + user.getAccessKey());
+        this.invalidAccessKeyResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
+    }
+
+    @When("A user open the main page Weatherstack")
+    public void userOpenTheMainPageWeatherstack() throws IOException {
+        this.documentWeatherstackMainPage = weatherstackMainPageResponse.parse();
+    }
+
+    @When("A user parsing Weatherstack information")
+    public void userParsingWeatherstackInformation() {
+        this.jsonContextWeatherstackInformationForTheCity = JsonPath.parse(weatherstackInformationForTheCityResponse.body());
     }
 
     @Then("The user receive code 105 function_access_restricted")
@@ -98,23 +121,6 @@ public class StepDefinitions {
         assertThat(errorCode).isEqualTo(615);
     }
 
-    @When("The user sends query with invalid access_key")
-    public void TheUserSendsInvalidAccess_key() throws IOException {
-        user.setAccessKey("12345");
-        log.info("the city and AccessKey: " + user.getCity() + " " + user.getAccessKey());
-        invalidAccessKeyResponse = HttpHelper.getCurrentWeatherCity(user.getCity(), user.getAccessKey());
-    }
-
-    @When("A user open the main page Weatherstack")
-    public void userOpenTheMainPageWeatherstack() throws IOException {
-        documentWeatherstackMainPage = weatherstackMainPageresponse.parse();
-    }
-
-    @When("A user parsing Weatherstack information")
-    public void userParsingWeatherstackInformation() {
-        jsonContextWeatherstackInformationForTheCity = JsonPath.parse(weatherstackInformationForTheCity.body());
-    }
-
     @Then("The user receive code 101 invalid_access_key")
     public void userReceiveCode101() {
         DocumentContext jsonContextAccessKeyInfo = JsonPath.parse(invalidAccessKeyResponse.body());
@@ -125,13 +131,13 @@ public class StepDefinitions {
 
     @Then("A user see current Temperature info")
     public void userSeeTemperatureInfo() {
-        currentCityTemperature = jsonContextWeatherstackInformationForTheCity.read("$['current']['temperature']");
-        log.info("currentTemperature: " + currentCityTemperature);
+        this.currentCityTemperatureC = jsonContextWeatherstackInformationForTheCity.read("$['current']['temperature']");
+        log.info("currentTemperature: " + currentCityTemperatureC);
     }
 
     @Then("^The current Temperature is Less Then \"(.*)\" C$")
     public void currentTemperatureIsLessThen(int temperature) {
-        assertThat(currentCityTemperature).isLessThan(temperature);
+        assertThat(currentCityTemperatureC).isLessThan(temperature);
     }
 
     @Then("A user see the Weather forecast for the 5 days")

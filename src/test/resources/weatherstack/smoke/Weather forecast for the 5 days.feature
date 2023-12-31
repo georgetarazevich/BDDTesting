@@ -4,7 +4,7 @@ Feature: The Weather forecast for the 5 days
   I want to know the Weather for some days
   To be ready for anything
 
-  @smoke @regress
+  @SmokeTest @regress
   Scenario: A user can see the Weather for 5 days
     Given The main page Weatherstack
     When A user open the main page Weatherstack
