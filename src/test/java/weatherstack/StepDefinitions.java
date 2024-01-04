@@ -63,20 +63,13 @@ public class StepDefinitions {
         this.access_key = accessKey;
     }
 
-    @When("The User explicitly requests info in Language by default")
-    public void userExplicitlyRequestsInfoInLanguageByDefault() throws IOException {
-        Allure.label("layer", "rest");
+    @When("The user requests info in Language")
+    public void userRequestsInfoInLanguage() throws IOException {
         log.info("the Language: " + this.query.getLanguage());
         this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(this.query, this.user);
     }
 
-    @When("The user requests info in Language different than default")
-    public void userRequestsInfoInLanguageDifferentThanDefault() throws IOException {
-        log.info("the Language: " + this.query.getLanguage());
-        this.languageWeatherstackForecastResponse = HttpHelper.getLanguageWeatherstackForecast(this.query, this.user);
-    }
-
-    @When("^The User requests info with city name \"(.*)\"$")
+    @When("^The user requests info with city name \"(.*)\"$")
     public void userRequestsInfoWithCityName(String city) throws IOException {
         this.user.setCity(city);
         log.info("the city: " + this.user.getCity());
@@ -100,36 +93,21 @@ public class StepDefinitions {
         this.jsonContextWeatherstackInformationForTheCity = JsonPath.parse(this.weatherstackInformationForTheCityResponse.body());
     }
 
-    @Then("The user receive code 105 function_access_restricted")
-    public void userReceiveCode105function_access_restricted() {
-        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
-        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
-        log.info("errorCode: " + errorCode);
-        assertThat(errorCode).isEqualTo(105);
-    }
-
-    @Then("The user receive code 605 invalid_language")
-    public void UserReceiveCode605invalid_language() {
-        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
-        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
-        log.info("errorCode: " + errorCode);
-        assertThat(errorCode).isEqualTo(605);
-    }
-
-    @Then("The user receive code 615 request_failed")
-    public void UserReceiveCode615request_failed() {
-        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
-        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
-        log.info("errorCode: " + errorCode);
-        assertThat(errorCode).isEqualTo(615);
-    }
-
     @Then("The user receive code 101 invalid_access_key")
     public void userReceiveCode101() {
         DocumentContext jsonContextAccessKeyInfo = JsonPath.parse(this.invalidAccessKeyResponse.body());
         int errorCode = jsonContextAccessKeyInfo.read("$['error']['code']");
         log.info("errorCode: " + errorCode);
         assertThat(errorCode).isEqualTo(101);
+    }
+
+    @Then("^The user receive code \"(.*)\"$")
+    public void userReceiveCodeCode(String code) {
+        log.info("Code: " + code);
+        DocumentContext jsonContextLanguageWeatherstackForecast = JsonPath.parse(this.languageWeatherstackForecastResponse.body());
+        int errorCode = jsonContextLanguageWeatherstackForecast.read("$['error']['code']");
+        log.info("errorCode: " + errorCode);
+        assertThat(errorCode).isEqualTo(Integer.parseInt(code));
     }
 
     @Then("A user see current Temperature info")

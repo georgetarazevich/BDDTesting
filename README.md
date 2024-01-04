@@ -18,8 +18,12 @@ In order to run tests you'll need:
 1. To run tests - check out the project to a local directory
 2. Run tests using Maven: `mvn clean install`
 
-### Checking  results
+### Checking  results:
 When the tests are finished, the folder 'target' contains:
 1. tests_log.log file with information on each test
 2. surefire-reports subfolder with emailable-report
 3. allure-results subfolder to see results in Allure report
+
+
+### Link to Unit tests:
+Link: https://github.com/georgetarazevich/UnitTesting
